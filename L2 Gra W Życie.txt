@@ -1,0 +1,150 @@
+#include <iostream>
+#include <ctime>
+#include <time.h>
+#include <windows.h>
+#include <process.h>
+#include <vector>
+#include <fstream>
+#include <stdlib.h>
+using namespace std;
+
+class GameOfLife
+{
+	int size = 0; // rozmiar planszy rzeczwyistej gry
+	int Psize = 0; // rozmiar planszy gry z obwódkami
+	vector <vector<int>> plansza;
+	vector <int> wierszPlanszy;
+public:
+	GameOfLife(int size)//inicjalizacja planszy + menu
+	{
+		this->Psize = size+2; //rozmiar planszy z obwódkami
+		this->size = size; //rozmiar planszy rzeczywsitej gry
+		srand(time(NULL));
+		start();
+	}
+	void start()
+	{
+		int wybor;
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 10);
+		cout << "Menu: \n";
+		cout << " 1 - New Game" << endl
+			<< " 2 - Load Game" << endl
+			<< " 0 - exit" << endl;
+		SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+		cin >> wybor;
+		system("cls");
+		switch (wybor)
+		{
+		case 1: for (int i = 0; i <= Psize; i++) wierszPlanszy.push_back(0);
+			for (int i = 0; i <= Psize; i++) plansza.push_back(wierszPlanszy);
+			for (int i = 1; i <= size * (size/4); i++) add(1+rand() % size, 1+ rand() % size, 1);
+			break;
+		case 2: loadGame(); break;
+		case 0: exit(0);  break;
+		default: system("cls");  start(); break;
+		}
+	}
+	void add(int x, int y, int wartosc)
+	{
+		plansza[x][y] = wartosc;
+	}
+	void showGame()
+	{
+		
+		for (int i = 1; i < Psize; i++)
+		{
+			for (int j = 1; j < Psize; j++)
+			{
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 1 + rand() % 15);
+				if (plansza[i][j]) cout << "X" << " ";
+				else cout << "  ";
+				SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 15);
+			}
+			cout << endl;
+		}
+		cout << endl;
+		//cout << "press '0' to exit ";
+	}
+	void rules()
+	{
+		//sprawdza dane pole i jej sasiadow oraz zlicza ilu ma zywych ilu martwych i na tej podstawie wedlug zasad kontynuuje sie gra
+		int martwi, zywi;
+		int i, j;
+		//for(int x=1; x<size*size; x++)
+		for (i = 1; i <= size; i++) //petla po wierszach
+		{
+			for (j = 1; j <= size; j++) //petla po kolumnach
+			{
+				//zerowanie liczby sasiadow
+				martwi = 0;
+				zywi = 0;
+				//sprawdzanie sasiadow plansza[i][j]
+				(plansza[i - 1][j - 1] == 0) ? martwi += 1 : zywi += 1; //<=> if (plansza[i-1][j-1]==0) martwi=+1; else zywi+=1;
+				(plansza[i - 1][j] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i - 1][j + 1] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i][j - 1] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i][j + 1] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i + 1][j - 1] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i + 1][j] == 0) ? martwi += 1 : zywi += 1;
+				(plansza[i + 1][j + 1] == 0) ? martwi += 1 : zywi += 1;
+			//	cout << "plansza[" << i << "][" << j << "]: " << plansza[i][j] << " | zywi: " << zywi << " | martwi: " << martwi << endl; 	//checkline
+				//sprawdzanie czy plansza[i][j] jest martwy czy zywy 
+				//oraz wykonanie odpowiednich operacji tzn:
+				//jesli martwe pole ma 3 zywych sasiadow to ozywa
+				//jesli zywe pole nie ma 2 lub 3 zywych sasiadow to umiera
+				(plansza[i][j] == 0 && (zywi == 3 || zywi == 2)) ? plansza[i][j] = 1 : plansza[i][j] = 0;
+				(plansza[i][j] == 1 && (zywi == 3 || zywi == 2)) ? plansza[i][j] = 1 : plansza[i][j] = 0;
+			}
+		}
+	}
+	void saveGame()
+	{
+		string nazwa = "GameFile.txt";
+		ofstream GameFile;
+		GameFile.open(nazwa.c_str(), ios::in);
+		for (int i = 0; i < size; i++)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				GameFile << plansza[i][j];
+			}
+		}
+		GameFile.close();
+		cout << "Zapisano gre\n";
+	}
+	void loadGame()
+	{
+		string nazwa = "GameFile.txt";
+		ofstream GameFile;
+		GameFile.open(nazwa.c_str(), ios::out);
+		for (int i = 0; i < size; i++)
+		{
+			for (int j = 0; j < size; j++)
+			{
+				GameFile << plansza[i][j];
+			}
+		}
+		GameFile.close();
+		cout << "Zapisano gre\n";
+	}
+};
+
+
+
+int main()
+{
+	int wybor;
+	GameOfLife Game(25);
+
+
+	for (;;)
+	{
+		Game.showGame();
+		Game.rules();
+		Sleep(100);
+		//system("PAUSE");
+		system("cls");
+	}
+
+	return 0;
+}
